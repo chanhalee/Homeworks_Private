@@ -24,6 +24,7 @@ while [ $num -le 3 ]; do
 			num2=`expr $num1 "*" $1`
 			echo "<fork$num2>"
 			./\test${num} 0 1000 $num2;
+			echo ""
 			num1=`expr $num1 + 1`
 		done
 	elif [ $# = 2 ]
@@ -36,6 +37,7 @@ while [ $num -le 3 ]; do
 				echo "<fork$num2>"
 				gdate +"%T.%3N";
 				./\test${num} 0 1000 $num2;
+				echo ""
 				gdate +"%T.%3N";
 				num1=`expr $num1 + 1`
 			done
@@ -45,11 +47,13 @@ while [ $num -le 3 ]; do
 				num2=`expr $num1 "*" $2`
 				echo "<fork$num2>"
 				./\test${num} 0 1000 $num2;
+				echo ""
 				num1=`expr $num1 + 1`
 			done
 		fi
 	else
 		./\test${num} 100 1000 10;		
+		echo ""
 	fi
 	rm ./\test${num}
 	num=`expr $num + 1`

@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		sigprocmask(SIG_SETMASK, &prev, &mask);
 	}
 	result += analyseArr(indexFrom, indexTo, findFrom, findTo);
-	printf("%d\n", result);
+	printf("%d", result);
 	return (0);
 }
 
