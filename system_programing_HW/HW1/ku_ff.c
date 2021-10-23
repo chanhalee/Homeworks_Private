@@ -51,10 +51,10 @@ int main(int argc, char **argv)
 	result = 0;
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGCHLD);
-
+	
+	sigprocmask(SIG_BLOCK, &mask, &prev);
 	while(++forkCounter < forkNum)
 	{
-		sigprocmask(SIG_BLOCK, &mask, &prev);
 		if((pid = fork()) == 0)
 		{
 			indexFrom = (forkCounter -1) * findGap;
@@ -62,12 +62,14 @@ int main(int argc, char **argv)
 			sendMessage(analyseArr(indexFrom, indexTo, findFrom, findTo));
 			exit(0);
 		}
-		while(!pid){
-			sigsuspend(&prev);
-		}
-		result += getMessage();
-		sigprocmask(SIG_SETMASK, &prev, &mask);
 	}
+	forkCounter = 0;
+	while(++forkCounter < forkNum){
+		while(!pid)
+			sigsuspend(&prev);
+		result += getMessage();
+	}
+	sigprocmask(SIG_SETMASK, &prev, &mask);
 	result += analyseArr(indexFrom, indexTo, findFrom, findTo);
 	printf("%d", result);
 	return (0);
