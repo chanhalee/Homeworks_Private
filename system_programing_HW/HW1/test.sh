@@ -3,7 +3,7 @@
 TESTDATALOG=./testData/;
 num=1
 while [ $num -le 3 ]; do
-	if test $# -lt 2;
+	if test $# -lt 1;
 	then
 		./generator.pl -100000 100000 ${num}0000000 > ku_ps_input.h
 		mkdir -p ${TESTDATALOG}\test${num}
@@ -19,15 +19,17 @@ while [ $num -le 3 ]; do
 
 	if [ $# = 1 ]
 	then
-		./\test${num} 0 1000 2;
+		num1=1
+		while [ $num1 -le 5 ]; do
+			num2=`expr $num1 "*" $1`
+			echo "<fork$num2>"
+			./\test${num} 0 1000 $num2;
+			num1=`expr $num1 + 1`
+		done
 	elif [ $# = 2 ]
 		then
-		if [ $2 = time ]
+		if [ $1 = time ]
 		then
-			gdate +"%T.%3N";
-			./\test${num} 0 1000 1;
-			gdate +"%T.%3N";
-		else
 			num1=1
 			while [ $num1 -le 5 ]; do
 				num2=`expr $num1 "*" $2`
@@ -35,6 +37,14 @@ while [ $num -le 3 ]; do
 				gdate +"%T.%3N";
 				./\test${num} 0 1000 $num2;
 				gdate +"%T.%3N";
+				num1=`expr $num1 + 1`
+			done
+		else
+			num1=1
+			while [ $num1 -le 5 ]; do
+				num2=`expr $num1 "*" $2`
+				echo "<fork$num2>"
+				./\test${num} 0 1000 $num2;
 				num1=`expr $num1 + 1`
 			done
 		fi
