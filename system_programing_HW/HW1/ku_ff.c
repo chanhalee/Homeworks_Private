@@ -78,6 +78,7 @@ int analyseArr(int indexFrom, int indexTo, int findFrom, int findTo)
 	int	localIndex;
 	int	counter;
 
+	counter = 0;
 	if(indexFrom < 0 || indexTo >= NUMS || indexFrom > indexTo)
 		return (0);
 	localIndex = indexFrom -1;
