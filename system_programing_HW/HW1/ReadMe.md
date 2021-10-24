@@ -31,3 +31,4 @@
 
 
 #### < 실행 예시>
+![30000000_1](https://github.com/lee-chanah/Homeworks_public/blob/master/system_programing_HW/HW1/Extra%26Docs/30000000_1.png)
