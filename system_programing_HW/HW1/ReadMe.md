@@ -73,7 +73,7 @@ ku_ff.c가 있는 디렉터리에 test.sh 와 generator.pl 을 추가합니다.
 
 
 #### < 실행 예시>
-![30000000_1](https://github.com/lee-chanah/Delete_20211105/blob/master/doc/30000000_1.png)
+![30000000_1](https://github.com/lee-chanah/Homeworks_public/blob/master/system_programing_HW/HW1/Extra%26Docs/30000000_1.png)
 #### <결과분석>
 > 실행에 동원된 프로세스 개수: PN
 > 
