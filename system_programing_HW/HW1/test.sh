@@ -8,13 +8,13 @@ while [ $num -le 3 ]; do
 		./generator.pl -1000 1000 ${num}0000000 > ku_ps_input.h
 		mkdir -p ${TESTDATALOG}\test${num}
 		cp ku_ps_input.h ${TESTDATALOG}\test${num}/ku_ps_input.h
-		gcc ku_ff.c -o ${TESTDATALOG}test_${num}
+		gcc ku_ff.c -lrt -o ${TESTDATALOG}test_${num}
 	elif [ $1 != fast ]
 	then
 		cp ku_ff.c ku_ff_test_${num}.c;
 		echo "#include \"${TESTDATALOG}test${num}/ku_ps_input.h\"" > tempdata.txt
 		cat tempdata.txt ku_ff_test_${num}.c > ku_ff_test${num}.c
-		gcc ku_ff_test${num}.c -DREDO -o \test${num};
+		gcc ku_ff_test${num}.c -lrt -DREDO -o \test${num};
 		rm ku_ff_test${num}.c ku_ff_test_${num}.c tempdata.txt;
 	fi
 
