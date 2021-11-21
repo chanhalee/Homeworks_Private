@@ -155,17 +155,18 @@ int analyseFile(int indexFrom, int indexTo, int findFrom, int findTo)
 			len -= ret;
 			rBuffer += ret;
 		}
-		rBuffer -= 6;
+		rBuffer = rBuf;
 		convertedNum = convertString(rBuffer);
 		if(convertedNum >= findFrom && convertedNum <= findTo)
 		{
 			myStrncpy(wBuffer,rBuf,6);
 			wBuffer += 6;
 			counter++;
-			if(counter % 20||localIndex == indexTo){
+			if((counter % 20) == 0||localIndex == indexTo){
 				pthread_mutex_unlock(&lock_read);	//Mutex unlock read
 				pthread_mutex_lock(&lock_write);	//Mutex lock write
-				write(fd_write, wBuffer, ((counter % 20)?20:counter%20)*6);
+				wBuffer = wBuf;
+				write(fd_write, wBuffer, 6*((counter % 20)?counter%20:20));		
 				pthread_mutex_unlock(&lock_write);	//Mutex unlock write
 				pthread_mutex_lock(&lock_read);	//Mutex lock read
 				wBuf[0] = '\0';
