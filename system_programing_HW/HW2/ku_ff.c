@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	suitQuantity += analyseFile(indexFrom+1, indexTo+1, findFrom, findTo);
 	while(terminatedThreadNum+1 != threadCounter)
 		sleep(1);
-	printf("%d", suitQuantity);
+	//printf("%d", suitQuantity);
 	char *temp = convertNum(suitQuantity);
 	pwrite(fd_write, temp, 6, 0);
 	if(temp)
@@ -105,6 +105,7 @@ int main(int argc, char **argv)
 		free(buf);
 	close(fd_read);
 	close(fd_write);
+	//while(1);
 	return (0);
 }
 
