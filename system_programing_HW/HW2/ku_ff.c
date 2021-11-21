@@ -12,12 +12,15 @@ int     analyseFile(int indexFrom, int indexTo, int findFrom, int findTo);
 int     threadMain(int *args);
 int     convertString(char *buffer);
 char    *convertNum(int num);
+void	myStrncpy(char *dest, char *cpy, int num);
 
 static  int suitQuantity = 0;
 static  int fd_read;
 static  int fd_write;
 static  int terminatedThreadNum = 0;
 static	int NUMS;
+static	pthread_mutex_t lock_read = PTHREAD_MUTEX_INITIALIZER;
+static	pthread_mutex_t lock_write = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char **argv)
 {
@@ -73,9 +76,9 @@ int main(int argc, char **argv)
 	buffer -= 6;
 	NUMS = convertString(buffer);
 	findGap = NUMS / threadNum;
-	threadCounter = 0;
 	indexFrom = (threadNum - 1) * findGap;
 	indexTo = NUMS-1;
+	threadCounter = 0;
 	result = 0;
 	while(++threadCounter < threadNum)
 	{
@@ -87,7 +90,9 @@ int main(int argc, char **argv)
 		threadArgs[3] = findTo;
 		pthread_create(&tid, NULL, (void *)threadMain, (void *)threadArgs);
 		pthread_detach(tid);
-	}
+	}	
+	indexFrom = (threadNum - 1) * findGap;
+	indexTo = NUMS-1;
 	suitQuantity += analyseFile(indexFrom+1, indexTo+1, findFrom, findTo);
 	while(terminatedThreadNum+1 != threadCounter)
 		sleep(1);
@@ -112,8 +117,10 @@ int threadMain(int *args)
 
 int analyseFile(int indexFrom, int indexTo, int findFrom, int findTo)
 {
-	char	*buf = (char *)malloc(7 * sizeof(char));
-	char	*buffer = buf;
+	char	*rBuf = (char *)malloc(7 * sizeof(char));
+	char	*rBuffer = rBuf;
+	char	*wBuf = (char *)malloc(121 * sizeof(char));
+	char	*wBuffer = wBuf;
 	int		localIndex;
 	int		len;
 	int		ret;
@@ -121,41 +128,56 @@ int analyseFile(int indexFrom, int indexTo, int findFrom, int findTo)
 	int		counter;
 
 	counter = 0;
+	rBuf[6] = '\0';
+	wBuf[0] = '\0';
+	wBuf[120] = '\0';
 	if(indexFrom < 0 || indexTo >= NUMS+1 || indexFrom > indexTo)
 		return (0);
 	localIndex = indexFrom -1;
+	pthread_mutex_lock(&lock_read);	//Mutex lock read
 	while(++localIndex <= indexTo)
 	{
 		len = 6;
 		while (len){
-			ret = pread(fd_read, buffer, 6, 6*localIndex);
+			ret = pread(fd_read, rBuffer, 6, 6*localIndex);
 			if (ret < 0){
 				if (errno == EINTR)
 					continue ;
 				perror("read");
 				close(fd_read);
 				close(fd_write);
-				if(buf)
-					free(buf);
+				if(rBuf)
+					free(rBuf);
+				if(wBuf)
+					free(wBuf);
 				exit(1);
 			}
 			len -= ret;
-			while (ret)
-			{
-				ret--;
-				buffer++;
-			}
+			rBuffer += ret;
 		}
-		buffer -= 6;
-		convertedNum = convertString(buffer);
+		rBuffer -= 6;
+		convertedNum = convertString(rBuffer);
 		if(convertedNum >= findFrom && convertedNum <= findTo)
 		{
+			myStrncpy(wBuffer,rBuf,6);
+			wBuffer += 6;
 			counter++;
-			write(fd_write, buffer, 6);
+			if(counter % 20||localIndex == indexTo){
+				pthread_mutex_unlock(&lock_read);	//Mutex unlock read
+				pthread_mutex_lock(&lock_write);	//Mutex lock write
+				write(fd_write, wBuffer, ((counter % 20)?20:counter%20)*6);
+				pthread_mutex_unlock(&lock_write);	//Mutex unlock write
+				pthread_mutex_lock(&lock_read);	//Mutex lock read
+				wBuf[0] = '\0';
+				wBuffer = wBuf;
+			}
 		}
 	}
-	if(buf)
-		free(buf);
+	pthread_mutex_unlock(&lock_read);	//Mutex unlock read
+	if(rBuf)
+		free(rBuf);
+	if(wBuf)
+		free(wBuf);
 	return (counter);
 }
 
@@ -192,4 +214,11 @@ char    *convertNum(int num)
 		num /= 10;
 	}
 	return (result);
+}
+void	myStrncpy(char *dest, char *cpy, int num)
+{
+	int index = -1;
+
+	while (++index < num)
+		dest[index] = cpy[index];
 }
