@@ -14,13 +14,14 @@ int     convertString(char *buffer);
 char    *convertNum(int num);
 void	myStrncpy(char *dest, char *cpy, int num);
 
-static  int suitQuantity = 0;
-static  int fd_read;
-static  int fd_write;
-static  int terminatedThreadNum = 0;
-static	int NUMS;
-static	pthread_mutex_t lock_read = PTHREAD_MUTEX_INITIALIZER;
-static	pthread_mutex_t lock_write = PTHREAD_MUTEX_INITIALIZER;
+int suitQuantity = 0;
+int fd_read;
+int fd_write;
+int terminatedThreadNum = 0;
+int NUMS;
+pthread_mutex_t lock_read = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock_write = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock_global = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char **argv)
 {
@@ -33,9 +34,10 @@ int main(int argc, char **argv)
 	int         indexTo;
 	int         threadNum;
 	int         threadCounter;
+	int			analyseResult;
 	pthread_t   tid;
 	int         result;
-	int         threadArgs[4];
+	int         *threadArgs;
 	char        *buf = (char *)malloc(7*sizeof(char));
 	char		*buffer = buf;
 	int         len;
@@ -84,6 +86,7 @@ int main(int argc, char **argv)
 	{
 		indexFrom = (threadCounter -1) * findGap;
 		indexTo = threadCounter * findGap -1;
+		threadArgs = (int *)malloc(4*sizeof(int));
 		threadArgs[0] = indexFrom+1;
 		threadArgs[1] = indexTo+1;
 		threadArgs[2] = findFrom;
@@ -93,7 +96,10 @@ int main(int argc, char **argv)
 	}	
 	indexFrom = (threadNum - 1) * findGap;
 	indexTo = NUMS-1;
-	suitQuantity += analyseFile(indexFrom+1, indexTo+1, findFrom, findTo);
+	analyseResult = analyseFile(indexFrom+1, indexTo+1, findFrom, findTo);
+	pthread_mutex_lock(&lock_global);
+	suitQuantity += analyseResult;
+	pthread_mutex_unlock(&lock_global);
 	while(terminatedThreadNum+1 != threadCounter)
 		sleep(1);
 	//printf("%d", suitQuantity);
@@ -105,14 +111,24 @@ int main(int argc, char **argv)
 		free(buf);
 	close(fd_read);
 	close(fd_write);
+	pthread_mutex_destroy(&lock_global);
+	pthread_mutex_destroy(&lock_read);
+	pthread_mutex_destroy(&lock_write);
 	//while(1);
 	return (0);
 }
 
 int threadMain(int *args)
 {
-	suitQuantity += analyseFile(args[0], args[1], args[2], args[3]);
+	int	analyseResult;
+
+	analyseResult = analyseFile(args[0], args[1], args[2], args[3]);
+	if(args)
+		free(args);
+	pthread_mutex_lock(&lock_global);
+	suitQuantity += analyseResult;
 	terminatedThreadNum++;
+	pthread_mutex_unlock(&lock_global);
 	return (0);
 }
 
@@ -127,8 +143,10 @@ int analyseFile(int indexFrom, int indexTo, int findFrom, int findTo)
 	int		ret;
 	int		convertedNum;
 	int		counter;
+	int		bufferCounter;
 
 	counter = 0;
+	bufferCounter = 0;
 	rBuf[6] = '\0';
 	wBuf[0] = '\0';
 	wBuf[120] = '\0';
@@ -163,17 +181,20 @@ int analyseFile(int indexFrom, int indexTo, int findFrom, int findTo)
 			myStrncpy(wBuffer,rBuf,6);
 			wBuffer += 6;
 			counter++;
-			if((counter % 20) == 0||localIndex == indexTo){
-				pthread_mutex_unlock(&lock_read);	//Mutex unlock read
-				pthread_mutex_lock(&lock_write);	//Mutex lock write
-				wBuffer = wBuf;
-				write(fd_write, wBuffer, 6*((counter % 20)?counter%20:20));		
-				pthread_mutex_unlock(&lock_write);	//Mutex unlock write
-				pthread_mutex_lock(&lock_read);	//Mutex lock read
-				wBuf[0] = '\0';
-				wBuffer = wBuf;
-			}
+			bufferCounter++;
 		}
+		if(bufferCounter && ((bufferCounter % 20) == 0||localIndex == indexTo)){
+			pthread_mutex_unlock(&lock_read);	//Mutex unlock read
+			pthread_mutex_lock(&lock_write);	//Mutex lock write
+			wBuffer = wBuf;
+			write(fd_write, wBuffer, 6*bufferCounter);
+			pthread_mutex_unlock(&lock_write);	//Mutex unlock write
+			pthread_mutex_lock(&lock_read);	//Mutex lock read
+			wBuf[0] = '\0';
+			wBuffer = wBuf;
+			bufferCounter = 0;
+		}
+
 	}
 	pthread_mutex_unlock(&lock_read);	//Mutex unlock read
 	if(rBuf)
