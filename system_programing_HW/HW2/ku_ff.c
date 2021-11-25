@@ -100,8 +100,14 @@ int main(int argc, char **argv)
 	pthread_mutex_lock(&lock_global);
 	suitQuantity += analyseResult;
 	pthread_mutex_unlock(&lock_global);
-	while(terminatedThreadNum+1 != threadCounter)
-		sleep(1);
+	while(terminatedThreadNum+1 != threadCounter){
+		pthread_mutex_lock(&lock_read);
+		pthread_mutex_lock(&lock_write);
+		pthread_mutex_lock(&lock_global);
+		pthread_mutex_unlock(&lock_global);
+		pthread_mutex_unlock(&lock_write);
+		pthread_mutex_unlock(&lock_read);
+	}
 	//printf("%d", suitQuantity);
 	char *temp = convertNum(suitQuantity);
 	pwrite(fd_write, temp, 6, 0);
