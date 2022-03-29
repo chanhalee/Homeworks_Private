@@ -41,26 +41,27 @@ t_pcb	*queue_pop_pcb(t_pcb_queue *queue)
 /*============= utils =============*/
 
 
-void emergency_exit(int exit_code)
+void	emergency_exit(int exit_code)
 {
 	int	priority;
 
 	priority = -1;
-	while(++priority < TYPE_PRIOR_MAX)
+	while (++priority < TYPE_PRIOR_MAX)
 	{
 		while (sched_info.queue[priority].front)
 		{
 			free(queue_pop_pcb(&sched_info.queue[priority]));
 		}
 	}
-	exit(exit_code);
+	if(exit_code != 0)
+		exit(exit_code);
 }
 
-void make_pcb(t_pcb **pcb, pid_t pcb_pid)
+void	make_pcb(t_pcb **pcb, pid_t pcb_pid)
 {
 	*pcb = (t_pcb *)malloc(sizeof(t_pcb));
 	if (!pcb)
-		emergency_exit(-1);
+		emergency_exit(1);
 	(*pcb)->lower = NULL;
 	(*pcb)->upper = NULL;
 	(*pcb)->time_left = TYPE_TIME_GAMING_TOLERANCE;
@@ -70,7 +71,7 @@ void make_pcb(t_pcb **pcb, pid_t pcb_pid)
 
 /*============= handlers =============*/
 
-void alarm_handler(int signal)
+void	alarm_handler(int signal)
 {
 	int	priority;
 	t_pcb *pcb;
@@ -80,7 +81,7 @@ void alarm_handler(int signal)
 	priority = TYPE_PRIOR_MAX;
 	while (--priority >= 0)
 	{
-		if(sched_info.queue[priority].front)
+		if (sched_info.queue[priority].front)
 		{
 			sched_info.queue[priority].front->time_left -= TYPE_TIME_SLICE;
 			if (sched_info.queue[priority].front->time_left > 0)
@@ -124,7 +125,7 @@ void alarm_handler(int signal)
 	}
 	if (sched_info.time_terminate <= 0)
 	{
-		emergency_exit(0);
+		return ;
 	}
 	priority = TYPE_PRIOR_MAX;
 	while (--priority >= 0)
@@ -147,7 +148,7 @@ static int	scheduler_initiate(char **argv)
 	static struct sigaction	sig_act;
 	int						process_quant;
 	pid_t					process_pid;
-	char					process_arg;
+	char					process_arg[2];
 	t_pcb					*new_pcb;
 
 	sched_info.time_terminate = atoi(argv[2]) * TYPE_TIME_SLICE;
@@ -164,6 +165,7 @@ static int	scheduler_initiate(char **argv)
 	sched_info.scheduler_pid = getpid();
 	sched_info.time_next_boost = TYPE_TIME_BOOST;
 	process_quant = -1;
+	process_arg[1] = '\0';
 	while (++process_quant < sched_info.process_quant)
 	{
 		process_pid = fork();
@@ -174,8 +176,8 @@ static int	scheduler_initiate(char **argv)
 		}
 		else
 		{
-			process_arg = ('A' + process_quant);
-			execl("./ku_app", "ku_app", &process_arg,  (char *) NULL);
+			process_arg[0] = ('A' + process_quant);
+			execl("./ku_app", "ku_app", (char *)process_arg,  (char *) NULL);
 		}
 	}
 	sleep(5);
@@ -190,28 +192,33 @@ static int	scheduler_initiate(char **argv)
 
 /*============= main =============*/
 
-int main(int argc, char **argv)
+int	main(int argc, char **argv)
 {
 	struct itimerval	timer;
 	struct timeval 		time_val;
 
+	/* validate argv and initiate*/
 	if (argc != 3)
 		return (0);
 	if (scheduler_initiate(argv))
-		emergency_exit(-1);
+		emergency_exit(1);
 
-
+	/* set timer value */
 	time_val.tv_sec = TYPE_TIME_SLICE;
 	time_val.tv_usec = 0;
 	timer.it_value = time_val;
 	timer.it_interval = time_val;
+
+	/* start scheduling */
 	if (sched_info.queue[TYPE_PRIOR_MAX - 1].front)
 	{
 		kill(sched_info.queue[TYPE_PRIOR_MAX - 1].front->prcess_id, SIGCONT);
 		setitimer(ITIMER_REAL, &timer, NULL);
 	}
-	while (1)
-	{
+	while (sched_info.time_terminate > 0)
 		sleep(TYPE_TIME_SLICE + 1);
-	}
+	
+	/* free heap memory and return */
+	emergency_exit(0);
+	return (0);
 }

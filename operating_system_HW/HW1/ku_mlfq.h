@@ -42,4 +42,21 @@ typedef struct s_scheduler_infobox
 	t_pcb_queue	queue[TYPE_PRIOR_MAX];
 }	t_scheduler_infobox;
 
+
+/*============= queue manipulation =============*/
+t_pcb_queue	*queue_push_pcb(t_pcb_queue *queue, t_pcb *pcb);
+t_pcb		*queue_pop_pcb(t_pcb_queue *queue);
+
+/*============= utils =============*/
+void		emergency_exit(int exit_code);
+void		make_pcb(t_pcb **pcb, pid_t pcb_pid);
+
+/*============= handlers =============*/
+void		alarm_handler(int signal);
+
+/*============= initiate =============*/
+static int	scheduler_initiate(char **argv);
+
+
+
 #endif
