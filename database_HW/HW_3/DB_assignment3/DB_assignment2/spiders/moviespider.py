@@ -27,23 +27,15 @@ class MoviespiderSpider(scrapy.Spider):
 			temp = str(colum.xpath('dl/dd[@class="star"]/dl[@class="info_star"]/dd[1]/div[@class="star_t1"]/a[1]/span[@class="num"]/text()').extract_first())
 			if(temp != 'None'):
 				item['netizen_rate'] = float(temp)
-			else:
-				item['netizen_rate'] = float(0.0)
 			temp = str(colum.xpath('dl/dd[@class="star"]/dl[@class="info_star"]/dd[1]/div[@class="star_t1"]/a[1]/span[@class="num2"]/em/text()').extract_first())
 			if(temp != 'None'):
 				item['netizen_count'] = int(temp.replace(",", ""))
-			else:
-				item['netizen_count'] = int(0)
 			temp = str(colum.xpath('dl/dd[@class="star"]/dl[@class="info_star"]/dd[2]/div[@class="star_t1"]/a[1]/span[@class="num"]/text()').extract_first())
 			if(temp != 'None'):
 				item['journalist_score'] = float(temp)
-			else:
-				item['journalist_score'] = float(0.0)
 			temp = str(colum.xpath('dl/dd[@class="star"]/dl[@class="info_star"]/dd[2]/div[@class="star_t1"]/a[1]/span[@class="num2"]/em/text()').extract_first())
 			if(temp != 'None'):
 				item['journalist_count'] = int(temp.replace(",", ""))
-			else:
-				item['journalist_count'] = int(0)
 			genreStr = []
 			for genre in colum.xpath('dl/dd[2]/dl[@class="info_txt1"]/dd[1]/span[@class="link_txt"]/a'):
 				genreStr.append(str(genre.xpath('text()').extract_first()))
