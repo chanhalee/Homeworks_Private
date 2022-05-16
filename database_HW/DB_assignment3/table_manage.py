@@ -25,6 +25,7 @@ def execute(sql):
     close_db(curs, conn)
 
 createTable = """create table movie(
+	id int auto_increment primary key,
     title varchar(25) not null,
     movie_rate varchar(10) default null,
     netizen_rate double default null,
