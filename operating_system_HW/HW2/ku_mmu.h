@@ -118,7 +118,7 @@ t_pcb *find_pcb_by_pid(char pid)
 		{
 			return (next);
 		}
-		next = &((*next).next);
+		next = next->next;
 	}
 	return (NULL);
 }
@@ -196,7 +196,7 @@ int ku_page_fault(char pid, char va)
 		}
 		else
 		{
-			now = ku_mmu_pcb_list->next;
+			now = now->next;
 		}
 	}
 	if(now == NULL)
@@ -208,7 +208,6 @@ int ku_page_fault(char pid, char va)
 	if(table[va / 4].eight_bit == 0) // unmapped
 	{
 		table[va / 4].eight_bit = (find_free_pmem()*4)|0X01;
-		// printf("%d: %d\n",va/4, *((char *)(table)+25));
 		return (0);
 	}
 	else // swap outed
@@ -280,13 +279,13 @@ int		ku_run_proc(char pid, struct ku_pte **ku_cr3)
 	{
 		if (next->prcess_id == pid)
 		{
-			ku_cr3 = &(next->page_table);
+			*(struct ku_pte **)ku_cr3 = next->page_table;
 			return (0);
 		}
 		else
 		{
 			prev = next;
-			next = ku_mmu_pcb_list->next;
+			next = next->next;
 		}
 	}
 
@@ -295,7 +294,7 @@ int		ku_run_proc(char pid, struct ku_pte **ku_cr3)
 		return (-1);
 	prev -> next = next;
 	next -> prev = prev;
-	ku_cr3 = &(next->page_table);
+	*(struct ku_pte **)ku_cr3 = next->page_table;
 	return (0);
 }
 
