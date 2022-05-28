@@ -16,21 +16,15 @@ typedef struct ku_pte {
 
 typedef struct s_alloc_entry{
 	unsigned int	p_addr;
-	unsigned char			pid;
-	unsigned char			va;
+	unsigned char	pid;
+	unsigned char	va;
 }	t_alloc_entry;
 
 typedef struct s_free_entry{
 	unsigned int	s_addr;
-	unsigned char			pid;
-	unsigned char			va;
+	unsigned char	pid;
+	unsigned char	va;
 } t_free_entry;
-
-typedef struct s_alloc_list{
-	unsigned		max_size;
-	unsigned		next;	// 0 == full
-	t_alloc_entry	*list;
-}	t_alloc_list;
 
 typedef struct s_free_list{
 	unsigned		max_size;
@@ -38,9 +32,16 @@ typedef struct s_free_list{
 	t_free_entry	*list;
 }	t_free_list;
 
+typedef struct s_alloc_list{
+	unsigned		max_size;
+	unsigned		next;	// 0 == full
+	t_alloc_entry	*list;
+}	t_alloc_list;
+
+
 typedef struct s_pcb
 {
-	unsigned char			prcess_id;
+	unsigned char	prcess_id;
 	struct s_pcb	*next;
 	struct s_pcb	*prev;
 	struct ku_pte	page_table[64];
@@ -49,7 +50,7 @@ typedef struct s_pcb
 
 static t_alloc_list		ku_mmu_alloc_list;
 static t_free_list		ku_mmu_free_list;
-static t_pcb	*ku_mmu_pcb_list = NULL;
+static t_pcb			*ku_mmu_pcb_list = NULL;
 
 int		ku_page_fault(char pid, char va);
 void	*ku_mmu_init(unsigned int mem_size, unsigned int swap_size);
@@ -210,7 +211,7 @@ int ku_page_fault(char pid, char va)
 		table[va / 4].eight_bit = (find_free_pmem()*4)|0X01;
 		return (0);
 	}
-	else // swap outed
+	else // swaped out
 	{	// swap 에서 다시 pmem으로 복귀할 경우 어떻게 swap의 빈 공간 처리할지 약속되지 않음. 임의로 그냥 구멍둟린채 진행한다고 가정
 		ku_mmu_free_list.list[(table[va / 4].eight_bit/2)*4].pid = 0;
 		ku_mmu_free_list.list[(table[va / 4].eight_bit/2)*4].va = 0;
