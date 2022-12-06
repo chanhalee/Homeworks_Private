@@ -75,7 +75,7 @@ class PolicyIteration:
         for state in self.all_states:
             if self.check_end_state(state):
                 next_value_table[self.get_table_index(
-                    state[0], state[1], state[2], state[3])] = 20.0
+                    state[0], state[1], state[2], state[3])] = 00.0
 
         for state in self.all_states:
             value = 0.0
@@ -226,11 +226,11 @@ class PolicyIteration:
     def get_reward(self, state, action):
         next_state = self.state_after_action(state, action)
         if (self.check_end_state(next_state)):
-            return (0)
+            return (20.0)
         if (action == 4 and (next_state[2] != 4 or state[2] == 4)):
-            return (-10)
+            return (-10.0)
         if action == 5:
-            return (-10)
+            return (-10.0)
         return (-1)
 
     # value_table, policy_table 의 원소에 접근할 수 있는 인덱스로 state값을 변환
